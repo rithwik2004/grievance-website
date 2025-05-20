@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Grievance Box 💌</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #ffe6f0, #fceaff);
+      font-family: 'Comic Sans MS', cursive;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      color: #e91e63;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .container {
+      background: #fff0f5;
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 0 20px rgba(255, 105, 180, 0.4);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      position: relative;
+    }
+    input, textarea, button {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.7rem;
+      border-radius: 10px;
+      border: 1px solid #ffb6c1;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #ff69b4;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .hearts {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .heart {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: url('https://upload.wikimedia.org/wikipedia/commons/e/e7/Heart_icon_red_hollow.svg') no-repeat center;
+      background-size: contain;
+      animation: float 4s linear infinite;
+      opacity: 0.6;
+    }
+    @keyframes float {
+      0% { transform: translateY(100vh) scale(1); }
+      100% { transform: translateY(-10vh) scale(1.5); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Submit Your Grievance 💖</h1>
+  <div class="container">
+    <div id="login-section">
+      <input type="text" id="username" placeholder="Username" />
+      <input type="password" id="password" placeholder="Password" />
+      <button onclick="login()">Login</button>
+    </div>
+
+    <div id="form-section" style="display: none;">
+      <textarea id="complaint" placeholder="Your sweet little complaint..."></textarea>
+      <button onclick="submitComplaint()">Submit 💌</button>
+    </div>
+  </div>
+
+  <div class="hearts" id="hearts"></div>
+
+  <audio id="popSound" src="https://www.myinstants.com/media/sounds/anime-wow.mp3" preload="auto"></audio>
+
+  <script>
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      fetch('/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Unauthorized");
+        return res.json();
+      })
+      .then(data => {
+        localStorage.setItem('token', data.token);
+        document.getElementById('login-section').style.display = 'none';
+        document.getElementById('form-section').style.display = 'block';
+      })
+      .catch(() => alert("Wrong credentials!"));
+    }
+
+    function submitComplaint() {
+      const complaint = document.getElementById('complaint').value;
+      const token = localStorage.getItem('token');
+      if (!token) return alert("Login first!");
+
+      fetch('/complaint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ complaint })
+      })
+      .then(res => res.text())
+      .then(msg => {
+        document.getElementById('popSound').play();
+        alert("Your complaint has been received! 🥺❤️");
+        document.getElementById('complaint').value = '';
+        showHearts();
+      })
+      .catch(() => alert("Failed to submit!"));
+    }
+
+    function showHearts() {
+      const container = document.getElementById('hearts');
+      for (let i = 0; i < 15; i++) {
+        const heart = document.createElement('div');
+        heart.classList.add('heart');
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.animationDuration = (Math.random() * 2 + 3) + 's';
+        container.appendChild(heart);
+        setTimeout(() => heart.remove(), 4000);
+      }
+    }
+  </script>
+</body>
+</html>
